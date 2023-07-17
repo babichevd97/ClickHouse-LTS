@@ -1,0 +1,78 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "{{ .Release.Name }}-graphite-deployment"
+  namespace: click
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: graphite-clickhouse
+  template:
+    metadata:
+      labels:
+        app: graphite-clickhouse
+    spec:
+      containers:
+        - name: graphite-clickhouse
+          image: lomik/graphite-clickhouse:latest
+          volumeMounts:
+            - name: graphite-conf
+              mountPath: "/etc/graphite-clickhouse"
+            - name: graphite-clickhouse-log
+              mountPath: "/var/log/graphite-clickhouse"
+              subPath: "graphite-clickhouse.log"
+      volumes:
+        - name: graphite-conf
+          configMap:
+            name: "{{ .Release.Name }}-graphite-cm"
+        - name: graphite-clickhouse-log
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: "{{ .Release.Name }}-graphite-service"
+  namespace: click
+spec:
+  type: NodePort
+  selector:
+    app: graphite-clickhouse
+  ports:
+    - name: "9090"
+      protocol: TCP
+      port: 9091
+      targetPort: 9090
+      nodePort: {{ .Values.graphite.serverNodePort }}
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: "{{ .Release.Name }}-graphite-cm"
+  namespace: click
+data:
+  graphite-clickhouse.conf: |
+    [common]
+    listen = ":9090"
+    max-cpu = 1
+    max-metrics-in-find-answer = 0
+    [clickhouse]
+    url = "http://{{ .Values.clickhouse.user }}:{{ .Values.clickhouse.pass }}@{{ .Release.Name }}-clickhouse-service:8123/0"
+    extra-prefix = ""
+    data-table = "graphite"
+    data-timeout = "1m0s"
+    index-table = "graphite_index"
+    index-use-daily = true
+    index-timeout = "1m"
+    tagged-table = "graphite_tagged"
+    date-tree-table = ""
+    date-tree-table-version = 0
+    tree-timeout = "1m0s"
+    [[logging]]
+    logger = ""
+    file = "/var/log/graphite-clickhouse/graphite-clickhouse.log"
+    level = "info"
+    encoding = "mixed"
+    encoding-time = "iso8601"
+    encoding-duration = "seconds"

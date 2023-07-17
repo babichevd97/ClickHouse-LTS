@@ -1,0 +1,22 @@
+clickhouse:
+  user: "demo"
+  pass: "demo"
+  serverNodePort: 30000
+  clientNodePort: 30001
+
+grafana:
+  user: "admin"
+  pass: "admin"
+  serverNodePort: 30002
+
+prometheus:
+  serverNodePort: 30003
+
+nodeexporter:
+  serverNodePort: 30004
+
+carbon:
+  serverNodePort: 30005
+
+graphite:
+  serverNodePort: 30006

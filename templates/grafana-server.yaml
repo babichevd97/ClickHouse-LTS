@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "{{ .Release.Name }}-grafana-deployment"
+  namespace: click
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grafana
+  template:
+    metadata:
+      labels:
+        app: grafana
+    spec:
+      containers:
+        - name: grafana
+          image: grafana/grafana-oss:latest
+          env:
+            - name: GF_SECURITY_ADMIN_USER
+              value: "{{ .Values.grafana.user }}"
+            - name: GF_SECURITY_ADMIN_PASSWORD
+              value: "{{ .Values.grafana.pass }}"
+          ports:
+            - containerPort: 3000
+          volumeMounts:
+            - name: datasource-volume
+              mountPath: /etc/grafana/provisioning/datasources
+      volumes:
+        - name: datasource-volume
+          configMap:
+            name: "{{ .Release.Name }}-grafana-cm"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: "{{ .Release.Name }}-grafana-service"
+  namespace: click
+spec:
+  type: NodePort
+  selector:
+    app: grafana
+  ports:
+    - name: "3000"
+      protocol: TCP
+      port: 3000
+      targetPort: 3000
+      nodePort: {{ .Values.grafana.serverNodePort }}
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: "{{ .Release.Name }}-grafana-cm"
+  namespace: click
+data:
+  datasources.yaml: |
+    apiVersion: 1
+    datasources:
+    - name: TestDS
+      type: prometheus
+      url: http://{{ .Release.Name }}-prometheus-service:9090
+      access: proxy
+      isDefault: true

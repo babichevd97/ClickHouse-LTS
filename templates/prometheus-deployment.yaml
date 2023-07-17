@@ -1,0 +1,69 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "{{ .Release.Name }}-prometheus-deployment"
+  namespace: click
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prometheus
+  template:
+    metadata:
+      labels:
+        app: prometheus
+    spec:
+      containers:
+        - name: prometheus
+          image: prom/prometheus
+          lifecycle:
+            postStart:
+              exec:
+                command: ["sh", "-c", "sleep 20"]
+          ports:
+            - containerPort: 9090
+          args:
+            - --config.file=/etc/prometheus/prometheus.yml
+          volumeMounts:
+            - name: config-volume
+              mountPath: /etc/prometheus
+      volumes:
+        - name: config-volume
+          configMap:
+            name: "{{ .Release.Name }}-prometheus-cm"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: "{{ .Release.Name }}-prometheus-service"
+  namespace: click
+spec:
+  selector:
+    app: prometheus
+  ports:
+    - name: "9090"
+      protocol: TCP
+      port: 9090
+      targetPort: 9090
+      nodePort: {{ .Values.prometheus.serverNodePort }}
+  type: NodePort
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: "{{ .Release.Name }}-prometheus-cm"
+  namespace: click
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 15s
+    scrape_configs:
+      - job_name: 'node-exporter'
+        static_configs:
+          - targets: ['{{ .Release.Name }}-nodeexporter-service:9100']
+    remote_write:
+      - url: "http://{{ .Release.Name }}-carbon-service:2006"
+    remote_read:
+      - url: "http://{{ .Release.Name }}-graphite-service:9091"

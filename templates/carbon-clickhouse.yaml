@@ -1,0 +1,122 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "{{ .Release.Name }}-carbon-deployment"
+  namespace: click
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: carbon-clickhouse
+  template:
+    metadata:
+      labels:
+        app: carbon-clickhouse
+    spec:
+      containers:
+        - name: carbon-clickhouse
+          image: lomik/carbon-clickhouse:latest
+          volumeMounts:
+            - name: carbon-conf
+              mountPath: "/etc/carbon-clickhouse"
+      volumes:
+        - name: carbon-conf
+          configMap:
+            name: "{{ .Release.Name }}-carbon-cm" 
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: "{{ .Release.Name }}-carbon-service"
+  namespace: click
+spec:
+  type: NodePort
+  selector:
+    app: carbon-clickhouse
+  ports:
+    - name: "2006"
+      protocol: TCP
+      port: 2006
+      targetPort: 2006
+      nodePort: {{ .Values.carbon.serverNodePort }}
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: "{{ .Release.Name }}-carbon-cm"
+  namespace: click
+data:
+  carbon-clickhouse.conf: |
+    [common]
+    metric-prefix = "stats.carbon_clickhouse.prom.{host}"
+    metric-endpoint = "local"
+    max-cpu = 1
+    metric-interval = "1m0s"
+
+    [data]
+    path = "/data/carbon-clickhouse/"
+    compression-level = 0
+    chunk-interval = "30s"
+    chunk-auto-interval = ""
+    compression = "none"
+
+    [upload.graphite]
+    type = "points"
+    table = "graphite"
+    zero-timestamp = false
+    threads = 1
+    url = "http://{{ .Values.clickhouse.user }}:{{ .Values.clickhouse.pass }}@{{ .Release.Name }}-clickhouse-service:8123/"
+    timeout = "1m0s"
+
+    [upload.graphite_index]
+    type = "index"
+    table = "graphite_index"
+    threads = 1
+    url = "http://{{ .Values.clickhouse.user }}:{{ .Values.clickhouse.pass }}@{{ .Release.Name }}-clickhouse-service:8123/"
+    timeout = "1m0s"
+    cache-ttl = "12h0m0s"
+
+    [upload.graphite_tagged]
+    type = "tagged"
+    table = "graphite_tagged"
+    threads = 1
+    url = "http://{{ .Values.clickhouse.user }}:{{ .Values.clickhouse.pass }}@{{ .Release.Name }}-clickhouse-service:8123/"
+    timeout = "1m0s"
+    cache-ttl = "12h0m0s"
+
+    [udp]
+    listen = ":2003"
+    enabled = false
+    log-incomplete = false
+    drop-future = "0s"
+    drop-past = "0s"
+
+    [tcp]
+    listen = ":2003"
+    enabled = false
+    drop-future = "0s"
+    drop-past = "0s"
+
+    [pickle]
+    listen = ":2004"
+    enabled = false
+
+
+    [prometheus]
+    listen = ":2006"
+    enabled = true
+    drop-future = "0s"
+    drop-past = "0s"
+
+    [[logging]]
+    logger = ""
+    file = "/var/log/carbon-clickhouse.log"
+    level = "info"
+    encoding = "mixed"
+    encoding-time = "iso8601"
+    encoding-duration = "seconds"
+
+    [convert_to_tagged]
+    enabled = false
+    separator = ""
