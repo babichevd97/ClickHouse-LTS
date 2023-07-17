@@ -52,7 +52,7 @@ metadata:
   name: "{{ .Release.Name }}-graphite-cm"
   namespace: click
 data:
-  graphite-clickhouse.conf: |
+  graphite-clickhouse.conf: | #Graphite ClickHouse simple configuration. More info here: https://github.com/go-graphite/graphite-clickhouse
     [common]
     listen = ":9090"
     max-cpu = 1

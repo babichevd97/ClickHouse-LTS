@@ -91,7 +91,7 @@ metadata:
   name: "{{ .Release.Name }}-clickhouse-cm"
   namespace: click
 data:
-  graphite_rollup.xml: |
+  graphite_rollup.xml: | #Required clickhouse xml - file to enable GraphiteMergeTree engine. Adjustable. Related info: https://clickhouse.com/docs/en/engines/table-engines/mergetree-family/graphitemergetree
     <yandex>
         <graphite_rollup>
             <path_column_name>Path</path_column_name>
@@ -119,7 +119,7 @@ metadata:
   name: "{{ .Release.Name }}-clickhouse-sql-poststart"
   namespace: click
 data:
-  graphite_tables.sql: |
+  graphite_tables.sql: | #Required sql-predefined tables for metrics. Must correlate with graphite_rollup.xml. Related info: https://clickhouse.com/docs/en/engines/table-engines/mergetree-family/graphitemergetree
     CREATE OR REPLACE TABLE graphite ( 
       Path String,  
       Value Float64,  

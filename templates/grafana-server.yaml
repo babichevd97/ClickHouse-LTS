@@ -55,7 +55,7 @@ metadata:
   name: "{{ .Release.Name }}-grafana-cm"
   namespace: click
 data:
-  datasources.yaml: |
+  datasources.yaml: | #Predefined datasource (remote - read from graphite)
     apiVersion: 1
     datasources:
     - name: TestDS

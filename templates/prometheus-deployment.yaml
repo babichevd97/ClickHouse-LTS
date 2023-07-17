@@ -56,7 +56,7 @@ metadata:
   name: "{{ .Release.Name }}-prometheus-cm"
   namespace: click
 data:
-  prometheus.yml: |
+  prometheus.yml: | #Predefined prometheus configuration. remote_read points to carbon-service, remote_write points to graphite-service
     global:
       scrape_interval: 15s
     scrape_configs:

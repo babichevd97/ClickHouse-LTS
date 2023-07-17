@@ -47,7 +47,7 @@ metadata:
   name: "{{ .Release.Name }}-carbon-cm"
   namespace: click
 data:
-  carbon-clickhouse.conf: |
+  carbon-clickhouse.conf: | #Carbon ClickHouse simple configuration. More info here:
     [common]
     metric-prefix = "stats.carbon_clickhouse.prom.{host}"
     metric-endpoint = "local"
