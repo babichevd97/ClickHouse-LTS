@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: "{{ .Release.Name }}-graphite-deployment"
-  namespace: click
+  namespace: click-graphite
 spec:
   replicas: 1
   selector:
@@ -33,7 +33,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: "{{ .Release.Name }}-graphite-service"
-  namespace: click
+  namespace: click-graphite
 spec:
   type: NodePort
   selector:
@@ -50,7 +50,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: "{{ .Release.Name }}-graphite-cm"
-  namespace: click
+  namespace: click-graphite
 data:
   graphite-clickhouse.conf: | #Graphite ClickHouse simple configuration. More info here: https://github.com/go-graphite/graphite-clickhouse
     [common]
@@ -58,9 +58,8 @@ data:
     max-cpu = 1
     max-metrics-in-find-answer = 0
     [clickhouse]
-    url = "http://{{ .Values.clickhouse.user }}:{{ .Values.clickhouse.pass }}@{{ .Release.Name }}-clickhouse-service:8123/0"
+    url = "http://default@clickhouse:8123/"
     extra-prefix = ""
-    data-table = "graphite"
     data-timeout = "1m0s"
     index-table = "graphite_index"
     index-use-daily = true
@@ -69,6 +68,8 @@ data:
     date-tree-table = ""
     date-tree-table-version = 0
     tree-timeout = "1m0s"
+    [[data-table]]
+    table = "graphite"
     [[logging]]
     logger = ""
     file = "/var/log/graphite-clickhouse/graphite-clickhouse.log"

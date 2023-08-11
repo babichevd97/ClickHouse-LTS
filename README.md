@@ -16,7 +16,7 @@ You need to be installed on yout tested system:
  ## Notes
  - For simplicity, all deployments are single-scaled, and no external volumes. You Can adjust it for more serious tests
  - Each service is exposed as a NodePort, so you will have an oportunity to discover each running service from you localhost. **If you are using minikube, you will face some problems with NodePort service type, as minikube works with this objects not in the same way kubernetes does it. You will need to run a service tunnel**. More info here: https://minikube.sigs.k8s.io/docs/handbook/accessing/
- - Kubernetes namespace click is created by default
+ - Kubernetes namespace click-graphite is created by default
  - Only NodePorts and User/Pass creds are templated
 
 ## Usage

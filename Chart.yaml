@@ -1,5 +1,5 @@
 apiVersion: v2
-namespace: click
+namespace: click-graphite
 name: clickhouse-graphite
 type: application
 version: 1.0.0

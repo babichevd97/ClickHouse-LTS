@@ -1,22 +1,22 @@
 clickhouse:
   user: "demo"
   pass: "demo"
-  serverNodePort: 30000
-  clientNodePort: 30001
+  serverNodePort: 30010
+  clientNodePort: 30011
 
 grafana:
   user: "admin"
   pass: "admin"
-  serverNodePort: 30002
+  serverNodePort: 30012
 
 prometheus:
-  serverNodePort: 30003
+  serverNodePort: 30013
 
 nodeexporter:
-  serverNodePort: 30004
+  serverNodePort: 30014
 
 carbon:
-  serverNodePort: 30005
+  serverNodePort: 30015
 
 graphite:
-  serverNodePort: 30006
+  serverNodePort: 30016

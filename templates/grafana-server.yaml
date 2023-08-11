@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: "{{ .Release.Name }}-grafana-deployment"
-  namespace: click
+  namespace: click-graphite
 spec:
   replicas: 1
   selector:
@@ -36,7 +36,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: "{{ .Release.Name }}-grafana-service"
-  namespace: click
+  namespace: click-graphite
 spec:
   type: NodePort
   selector:
@@ -53,7 +53,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: "{{ .Release.Name }}-grafana-cm"
-  namespace: click
+  namespace: click-graphite
 data:
   datasources.yaml: | #Predefined datasource (remote - read from graphite)
     apiVersion: 1
