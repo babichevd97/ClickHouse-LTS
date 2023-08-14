@@ -24,5 +24,5 @@ You need to be installed on yout tested system:
 - Cd to repository
 - Run: 
     ```bash
-    helm -n click install cliskhouse-longstorage .
+    helm -n click-graphite install cliskhouse-longstorage .
     ```
