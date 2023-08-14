@@ -66,4 +66,4 @@ data:
     remote_write:
       - url: "http://{{ .Release.Name }}-carbon-service:2006"
     remote_read:
-      - url: "http://{{ .Release.Name }}-graphite-service:9091"
+      - url: "http://{{ .Release.Name }}-graphite-service:9091/read"

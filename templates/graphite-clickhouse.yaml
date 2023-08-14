@@ -58,7 +58,7 @@ data:
     max-cpu = 1
     max-metrics-in-find-answer = 0
     [clickhouse]
-    url = "http://default@clickhouse:8123/"
+    url = "http://{{ .Values.clickhouse.user }}:{{ .Values.clickhouse.pass }}@{{ .Release.Name }}-clickhouse-service:8123/"
     extra-prefix = ""
     data-timeout = "1m0s"
     index-table = "graphite_index"
