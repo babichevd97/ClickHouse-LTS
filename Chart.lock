@@ -1,0 +1,6 @@
+dependencies:
+- name: chproxy
+  repository: file://../plum-helm/charts/chproxy
+  version: 1.0.4
+digest: sha256:56f37c3815f0e83dee73dd5e9fbee4a1f1b540adc43e116baca75a5d77c4363b
+generated: "2023-09-11T23:29:29.584692+03:00"

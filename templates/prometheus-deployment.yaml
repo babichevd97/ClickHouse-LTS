@@ -1,8 +1,9 @@
+{{- if .Values.prometheus.enabled }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: "{{ .Release.Name }}-prometheus-deployment"
-  namespace: click-graphite
+#   namespace: click-graphite
 spec:
   replicas: 1
   selector:
@@ -46,8 +47,8 @@ spec:
       protocol: TCP
       port: 9090
       targetPort: 9090
-      nodePort: {{ .Values.prometheus.serverNodePort }}
-  type: NodePort
+    #   nodePort: {{ .Values.prometheus.serverNodePort }}
+  type: ClusterIP
 
 ---
 apiVersion: v1
@@ -66,4 +67,5 @@ data:
     remote_write:
       - url: "http://{{ .Release.Name }}-carbon-service:2006"
     remote_read:
-      - url: "http://{{ .Release.Name }}-graphite-service:9091/read"
+      - url: "http://{{ .Release.Name }}-graphite-service:9091/api/v1/read"
+{{- end }}

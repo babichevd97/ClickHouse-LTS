@@ -1,8 +1,9 @@
+{{- if .Values.grafana.enabled }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: "{{ .Release.Name }}-grafana-deployment"
-  namespace: click-graphite
+#   namespace: click-graphite
 spec:
   replicas: 1
   selector:
@@ -13,6 +14,8 @@ spec:
       labels:
         app: grafana
     spec:
+      securityContext:
+        runAsUser: 0
       containers:
         - name: grafana
           image: grafana/grafana-oss:latest
@@ -26,19 +29,37 @@ spec:
           volumeMounts:
             - name: datasource-volume
               mountPath: /etc/grafana/provisioning/datasources
+            - name: grafana-data-volume
+              mountPath: "/var/lib/grafana"
       volumes:
         - name: datasource-volume
           configMap:
             name: "{{ .Release.Name }}-grafana-cm"
+        - name: grafana-data-volume
+          persistentVolumeClaim:
+            claimName: "{{ .Release.Name }}-grafana-pvc"
+
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: "{{ .Release.Name }}-grafana-pvc"
+spec:
+  accessModes:
+    - "ReadWriteOnce"
+  resources:
+    requests:
+      storage:  "10Gi"
+  storageClassName: "yc-network-hdd"
 
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: "{{ .Release.Name }}-grafana-service"
-  namespace: click-graphite
+#   namespace: click-graphite
 spec:
-  type: NodePort
+  type: ClusterIP
   selector:
     app: grafana
   ports:
@@ -46,7 +67,7 @@ spec:
       protocol: TCP
       port: 3000
       targetPort: 3000
-      nodePort: {{ .Values.grafana.serverNodePort }}
+    #   nodePort: {{ .Values.grafana.serverNodePort }}
 
 ---
 apiVersion: v1
@@ -56,10 +77,11 @@ metadata:
   namespace: click-graphite
 data:
   datasources.yaml: | #Predefined datasource (remote - read from graphite)
-    apiVersion: 1
-    datasources:
-    - name: TestDS
-      type: prometheus
-      url: http://{{ .Release.Name }}-prometheus-service:9090
-      access: proxy
-      isDefault: true
+    # apiVersion: 1
+    # datasources:
+    # - name: TestDS
+    #   type: prometheus
+    #   url: http://{{ .Release.Name }}-prometheus-service:9090
+    #   access: proxy
+    #   isDefault: true
+{{- end }}

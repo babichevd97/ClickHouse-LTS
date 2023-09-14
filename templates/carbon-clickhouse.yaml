@@ -1,10 +1,11 @@
+{{- if .Values.carbon.enabled }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: "{{ .Release.Name }}-carbon-deployment"
-  namespace: click-graphite
+#   namespace: click-graphite
 spec:
-  replicas: 1
+  replicas: 3
   selector:
     matchLabels:
       app: carbon-clickhouse
@@ -15,20 +16,23 @@ spec:
     spec:
       containers:
         - name: carbon-clickhouse
-          image: lomik/carbon-clickhouse:latest
+          image: kazhem/carbon-clickhouse:v0.11.7
+          imagePullPolicy: Always
           volumeMounts:
             - name: carbon-conf
               mountPath: "/etc/carbon-clickhouse"
       volumes:
         - name: carbon-conf
           configMap:
-            name: "{{ .Release.Name }}-carbon-cm" 
+            name: "{{ .Release.Name }}-carbon-cm"
+
+---
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: "{{ .Release.Name }}-carbon-service"
-  namespace: click-graphite
+#   namespace: click-graphite
 spec:
   type: NodePort
   selector:
@@ -45,7 +49,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: "{{ .Release.Name }}-carbon-cm"
-  namespace: click-graphite
+#   namespace: click-graphite
 data:
   carbon-clickhouse.conf: | #Carbon ClickHouse simple configuration. More info here:
     [common]
@@ -63,27 +67,39 @@ data:
 
     [upload.graphite]
     type = "points"
-    table = "graphite"
+    table = "distributed_graphite"
     zero-timestamp = false
     threads = 1
-    url = "http://{{ .Values.clickhouse.user }}:{{ .Values.clickhouse.pass }}@{{ .Release.Name }}-clickhouse-service:8123/"
+    url = "{{ .Values.carbon.clickhouse.protocol }}://{{ .Values.carbon.clickhouse.user }}:{{ .Values.carbon.clickhouse.pass }}@{{ .Values.carbon.clickhouse.host }}:{{ .Values.carbon.clickhouse.port }}/"
     timeout = "1m0s"
+    # [upload.graphite.tls]
+    # ca-cert = ["/usr/share/ca-certificates/Yandex/ca-cert"]
+    # server-name = "<server-name>"
+    # insecure-skip-verify = true # if true, server certificates will not be validated
 
     [upload.graphite_index]
     type = "index"
-    table = "graphite_index"
+    table = "distributed_graphite_index"
     threads = 1
-    url = "http://{{ .Values.clickhouse.user }}:{{ .Values.clickhouse.pass }}@{{ .Release.Name }}-clickhouse-service:8123/"
+    url =  "{{ .Values.carbon.clickhouse.protocol }}://{{ .Values.carbon.clickhouse.user }}:{{ .Values.carbon.clickhouse.pass }}@{{ .Values.carbon.clickhouse.host }}:{{ .Values.carbon.clickhouse.port }}/"
     timeout = "1m0s"
     cache-ttl = "12h0m0s"
+    # [upload.graphite_index.tls]
+    # # ca-cert = [ "/usr/share/ca-certificates/Yandex/ca-cert" ]
+    # # server-name = "<server-name>"
+    # insecure-skip-verify = true # if true, server certificates will not be validated
 
     [upload.graphite_tagged]
     type = "tagged"
-    table = "graphite_tagged"
+    table = "distributed_graphite_tagged"
     threads = 1
-    url = "http://{{ .Values.clickhouse.user }}:{{ .Values.clickhouse.pass }}@{{ .Release.Name }}-clickhouse-service:8123/"
+    url = "{{ .Values.carbon.clickhouse.protocol }}://{{ .Values.carbon.clickhouse.user }}:{{ .Values.carbon.clickhouse.pass }}@{{ .Values.carbon.clickhouse.host }}:{{ .Values.carbon.clickhouse.port }}/"
     timeout = "1m0s"
     cache-ttl = "12h0m0s"
+    # [upload.graphite_tagged.tls]
+    # # ca-cert = [ "/usr/share/ca-certificates/Yandex/ca-cert" ]
+    # # server-name = "<server-name>"
+    # insecure-skip-verify = true # if true, server certificates will not be validated
 
     [udp]
     listen = ":2003"
@@ -109,10 +125,10 @@ data:
     drop-future = "0s"
     drop-past = "0s"
 
-    [[logging]]
+    [logging]
     logger = ""
-    file = "/var/log/carbon-clickhouse.log"
-    level = "info"
+    file = "stdout"
+    level = "debug"
     encoding = "mixed"
     encoding-time = "iso8601"
     encoding-duration = "seconds"
@@ -120,3 +136,8 @@ data:
     [convert_to_tagged]
     enabled = false
     separator = ""
+
+
+---
+
+{{- end}}

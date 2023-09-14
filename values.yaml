@@ -1,22 +1,89 @@
 clickhouse:
+  enabled: false
   user: "demo"
   pass: "demo"
   serverNodePort: 30010
   clientNodePort: 30011
 
 grafana:
+  enabled: true
   user: "admin"
   pass: "admin"
   serverNodePort: 30012
 
 prometheus:
+  enabled: true
   serverNodePort: 30013
 
 nodeexporter:
+  enabled: true
   serverNodePort: 30014
 
 carbon:
-  serverNodePort: 30015
+  clickhouse:
+    user: admin
+    pass: "test"
+    host: "host.mdb.yandexcloud.net"
+    protocol: "https"
+    port: 8443
+  enabled: true
 
 graphite:
-  serverNodePort: 30016
+  clickhouse:
+    user: admin
+    pass: "test"
+    host: "host.mdb.yandexcloud.net"
+    protocol: "https"
+    port: 8443
+  enabled: true
+
+qryn:
+  enabled: false
+  click:
+    user: demo
+    password: demo
+    port: 8123
+    # address: host.mdb.yandexcloud.net
+    address: graphite-click-clickhouse-service.click-graphite.svc.cluster.local
+
+chproxy:
+  enabled: false
+
+  replicaCount: 1
+
+  image:
+    # repository: contentsquareplatform/chproxy
+    repository: kazhem/chproxy
+    # Overrides the image tag whose default is the chart appVersion.
+    tag: "v1.25.0"
+
+
+  serviceAccount:
+    # Specifies whether a service account should be created
+    create: false
+
+
+  config: |
+    hack_me_please: true
+    log_debug: true
+    param_groups:
+        # Group name, which may be passed into `params` option on the `user` level.
+      - name: "default"
+        # List of key-value params to send
+        params:
+          - key: "max_memory_usage"
+            value: "40000000000"
+    server:
+      http:
+        listen_addr: ":80"
+    users:
+      - name: "default"
+        to_user: "admin"
+        to_cluster: "default"
+    clusters:
+      - name: "default"
+        scheme: "https"
+        nodes: [ "host.mdb.yandexcloud.net:8443"]
+        users:
+          - name: admin
+            password: pass
