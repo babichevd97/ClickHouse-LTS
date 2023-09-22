@@ -1,4 +1,7 @@
-clickhouse:
+# Fill in your hosts, users and passwords
+# Enabled field specifies, if corresponding pod should be created
+
+clickhouse: # For local clickhouse installatiom
   enabled: false
   user: "demo"
   pass: "demo"
@@ -7,8 +10,8 @@ clickhouse:
 
 grafana:
   enabled: true
-  user: "admin"
-  pass: "admin"
+  user: "admin" # Default user, that will be assigned while starting pod
+  pass: "admin" # Default pass, that will be assigned while starting pod
   serverNodePort: 30012
 
 prometheus:
@@ -20,24 +23,25 @@ nodeexporter:
   serverNodePort: 30014
 
 carbon:
-  clickhouse:
-    user: admin
-    pass: "test"
-    host: "host.mdb.yandexcloud.net"
+  clickhouse: # Your clickhoure credentials. Fill in, if you have are using not local cluster for tests 
+    user: admin # Specify clickhouse user
+    pass: "admin" # Specify clickhouse pass
+    #host: "graphite-click-chproxy.click-graphite" # Specify clickhouse URL  (or proxy url)
+    host: "mdb.yandexcloud.net" # Specify clickhouse URL  (or proxy url)
     protocol: "https"
     port: 8443
   enabled: true
 
 graphite:
-  clickhouse:
-    user: admin
-    pass: "test"
-    host: "host.mdb.yandexcloud.net"
-    protocol: "https"
-    port: 8443
-  enabled: true
+  clickhouse: # Your clickhoure credentials. Fill in, if you have are using not local cluster for tests 
+    user: admin # Specify clickhouse user
+    pass: "admin" # Specify clickhouse pass
+    host: "mdb.yandexcloud.net" # Specify clickhouse URL (or proxy url)
+    protocol: "http"
+    port: 80
+  enabled: false
 
-qryn:
+qryn: 
   enabled: false
   click:
     user: demo
@@ -46,44 +50,44 @@ qryn:
     # address: host.mdb.yandexcloud.net
     address: graphite-click-clickhouse-service.click-graphite.svc.cluster.local
 
-chproxy:
+chproxy: # In case you want to use chproxy to apply balancing on your cluster
   enabled: false
 
-  replicaCount: 1
+  replicaCount: 5
 
   image:
     # repository: contentsquareplatform/chproxy
-    repository: kazhem/chproxy
+
+    repository: chproxy 
+    # Base chproxy image. If you want to connect strictly with ssl (ex., cloud providers usually have only this options)
+    # You might need to create your own custom image and put essentials certs inside it
+
     # Overrides the image tag whose default is the chart appVersion.
     tag: "v1.25.0"
 
 
   serviceAccount:
-    # Specifies whether a service account should be created
+    # Specifies whether a service account should be created (clour provider)
     create: false
 
 
-  config: |
+  config: | 
     hack_me_please: true
-    log_debug: true
-    param_groups:
-        # Group name, which may be passed into `params` option on the `user` level.
-      - name: "default"
-        # List of key-value params to send
-        params:
-          - key: "max_memory_usage"
-            value: "40000000000"
+    log_debug: false
     server:
       http:
         listen_addr: ":80"
     users:
-      - name: "default"
-        to_user: "admin"
-        to_cluster: "default"
+      - name: "admin" # Specify user creds, if you want proxy auth
+        password: "admin" # Specify pass creds, if you want proxy auth
+        to_user: "admin" # Specify clickhouse user to send data
+        to_cluster: "default" # Specify clickhouse cluster, where to send data
     clusters:
-      - name: "default"
+      - name: "default" # Specify cluster name
         scheme: "https"
-        nodes: [ "host.mdb.yandexcloud.net:8443"]
+        nodes: [        # Set of nodes to perform LoadBalancing
+          "mdb.yandexcloud.net:8443",
+        ]
         users:
-          - name: admin
-            password: pass
+          - name: "admin" # Specify clickhouse user
+            password: "admin" # Specify clickhouse pass
