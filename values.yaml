@@ -1,6 +1,13 @@
 # Fill in your hosts, users and passwords
 # Enabled field specifies, if corresponding pod should be created
 
+clickhousefront: # For front clickhouse installation
+  enabled: true
+  user: "demo"
+  pass: "demo"
+  serverNodePort: 30010
+  clientNodePort: 30011
+
 clickhouse: # For local clickhouse installatiom
   enabled: false
   user: "demo"

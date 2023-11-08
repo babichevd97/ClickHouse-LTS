@@ -22,7 +22,8 @@ You need to be installed on yout tested system:
 ## Usage
 - Pull this repository locally, using git pull
 - Cd to repository
+- Edit values.yaml file or create your own CustomValues.yaml - file
 - Run: 
     ```bash
-    helm -n click-graphite install cliskhouse-longstorage .
+    helm -n click-graphite install -f CustomValues.yaml clickhouse-longstorage .
     ```
