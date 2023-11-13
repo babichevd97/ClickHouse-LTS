@@ -1,6 +1,9 @@
 # Fill in your hosts, users and passwords
 # Enabled field specifies, if corresponding pod should be created
 
+zookeeper:
+  enabled: false
+
 clickhousefront: # For front clickhouse installation
   enabled: true
   user: "demo"
@@ -33,7 +36,6 @@ carbon:
   clickhouse: # Your clickhoure credentials. Fill in, if you have are using not local cluster for tests 
     user: admin # Specify clickhouse user
     pass: "admin" # Specify clickhouse pass
-    #host: "graphite-click-chproxy.click-graphite" # Specify clickhouse URL  (or proxy url)
     host: "mdb.yandexcloud.net" # Specify clickhouse URL  (or proxy url)
     protocol: "https"
     port: 8443

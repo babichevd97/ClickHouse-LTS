@@ -57,15 +57,33 @@ metadata:
   name: "{{ .Release.Name }}-prometheus-cm"
   namespace: click-graphite
 data:
-  prometheus.yml: | #Predefined prometheus configuration. remote_read points to carbon-service, remote_write points to graphite-service
+#Predefined prometheus configuration. You can change write/read endpoints to carbon-service/graphite-service
+#You can configure to collect performance metrics directly from cloud service, if you use clickhouse managed
+  prometheus.yml: | 
     global:
-      scrape_interval: 15s
+      scrape_interval: 15s  
     scrape_configs:
-      - job_name: 'node-exporter'
+      - job_name: 'yc-monitoring-export'
+        metrics_path: '/monitoring/v2/prometheusMetrics'
+        scheme: 'https'
+        params:
+          folderId:
+          - '{{ .Values.prometheus.folderId }}'
+          service:
+          - '{{ .Values.prometheus.service }}'
+        bearer_token: '{{ .Values.prometheus.token }}'
         static_configs:
-          - targets: ['{{ .Release.Name }}-nodeexporter-service:9100']
-    remote_write:
-      - url: "http://{{ .Release.Name }}-carbon-service:2006"
-    remote_read:
-      - url: "http://{{ .Release.Name }}-graphite-service:9091/api/v1/read"
+        - targets: ['monitoring.api.cloud.yandex.net']
+          labels:
+            folderId: '{{ .Values.prometheus.folderId }}'
+            service: '{{ .Values.prometheus.service }}'
+            
+               
+      #- job_name: 'node-exporter'
+        #static_configs:
+          #- targets: ['{{ .Release.Name }}-nodeexporter-service:9100']
+    #remote_write:
+      #- url: "http://{{ .Release.Name }}-carbon-service:2006"
+    #remote_read:
+      #- url: "http://{{ .Release.Name }}-graphite-service:9091/api/v1/read"
 {{- end }}
