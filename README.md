@@ -7,11 +7,6 @@ This is a simple hands-on chart for trying out how does ClickHouse-Graphite-Carb
 - https://github.com/go-graphite/carbon-clickhouse - carbon - clickhouse documentation
 - https://thin-record-006.notion.site/Using-Clickhouse-as-long-term-storage-for-Prometheus-449b1c3a0a8b4cdb90b7352f807d6487?pvs=4
 
-## Infrastructe blueprint. Single node
-![plot](./basic.png)
-## Infrastructe blueprint. Distributed system
-![plot](./Distributed.png)
-
 ## Requirements
 You need to be installed on yout tested system:
 - Helm

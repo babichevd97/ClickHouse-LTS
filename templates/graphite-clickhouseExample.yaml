@@ -1,0 +1,113 @@
+{{- if .Values.graphiteLTS.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "{{ .Release.Name }}-graphite-deployment"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: graphite-clickhouse
+  template:
+    metadata:
+      labels:
+        app: graphite-clickhouse
+    spec:
+      {{- with $.Values.graphiteLTS.clickhouse.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: graphite-clickhouse
+          image: kazhem/graphite-clickhouse:v0.13.4
+          volumeMounts:
+            - name: graphite-conf
+              mountPath: "/etc/graphite-clickhouse"
+
+            #In case you are using managed solution, you will need to
+            #upload a CAcert inside container to let
+            #Incoming traffic to your cluster. Otherwise traffic will not pass.
+            #Example below shows one of the way to use it
+            - name: click-cert
+              mountPath: "/usr/local/share/ca-certificates/Yandex/"
+            
+            - name: graphite-clickhouse-log
+              mountPath: "/var/log/graphite-clickhouse"
+              subPath: "graphite-clickhouse.log"
+      volumes:
+        - name: graphite-conf
+          configMap:
+            name: "{{ .Release.Name }}-graphite-cm"
+        - name: click-cert
+          configMap:
+            name: "{{ .Release.Name }}-graphite-cm-ca"
+        - name: graphite-clickhouse-log
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: "{{ .Release.Name }}-graphite-service"
+#   namespace: click-graphite
+spec:
+  type: ClusterIP
+  selector:
+    app: graphite-clickhouse
+  ports:
+    - name: "9090"
+      protocol: TCP
+      port: 9091
+      targetPort: 9092
+    #   nodePort: {{ .Values.graphiteLTS.serverNodePort }}
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: "{{ .Release.Name }}-graphite-cm"
+#   namespace: click-graphite
+data:
+  graphite-clickhouse.conf: | #Graphite ClickHouse simple configuration. More info here: https://github.com/go-graphite/graphite-clickhouse
+    [common]
+    listen = ":9090"
+    max-cpu = 2
+    max-metrics-in-find-answer = 0
+    max-metrics-per-target = 0
+    [clickhouse]
+    url = "{{ .Values.graphiteLTS.clickhouse.protocol }}://{{ .Values.graphiteLTS.clickhouse.user }}:{{ .Values.graphiteLTS.clickhouse.pass }}@{{ .Values.graphiteLTS.clickhouse.host }}:{{ .Values.graphiteLTS.clickhouse.port }}/"
+    extra-prefix = ""
+    data-timeout = "10m0s"
+    index-table = "distributed_graphite_index"
+    index-use-daily = true
+    index-timeout = "10m"
+    tagged-table = "distributed_graphite_tagged"
+    date-tree-table = ""
+    date-tree-table-version = 0
+    tree-timeout = "10m0s"
+    # mTLS HTTPS configuration for connecting to clickhouse server
+    # [clickhouse.tls]
+    # ca-cert = ["/usr/local/share/ca-certificates/Yandex/ca-cert"]
+    # insecure-skip-verify = true
+    [[data-table]]
+    table = "distributed_graphite"
+    [[logging]]
+    logger = ""
+    file = "stdout"
+    level = "debug"
+    encoding = "mixed"
+    encoding-time = "iso8601"
+    encoding-duration = "seconds"
+
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: "{{ .Release.Name }}-graphite-cm-ca"
+#   namespace: click-graphite
+data:
+  ca-cert: |
+    -----BEGIN CERTIFICATE-----
+    -----
+    -----END CERTIFICATE-----
+{{- end }}

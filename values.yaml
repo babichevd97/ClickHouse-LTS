@@ -67,7 +67,7 @@ nodeexporter:
   #  task: "clickhouse" 
   #}
 
-carbon:
+carbonLTS:
   clickhouse: # Your clickhoure credentials. Fill in, if you have are using not local cluster for tests 
     user: admin # Specify clickhouse user
     pass: "admin" # Specify clickhouse pass
@@ -85,7 +85,7 @@ carbon:
     #  task: "bench" 
     #}  
 
-graphite:
+graphiteLTS:
   clickhouse: # Your clickhoure credentials. Fill in, if you have are using not local cluster for tests 
     user: admin # Specify clickhouse user
     pass: "admin" # Specify clickhouse pass
