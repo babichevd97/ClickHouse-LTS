@@ -1,0 +1,46 @@
+#You can configure to collect performance metrics directly from cloud service, if you use clickhouse managed 
+    global:
+      scrape_interval: 15s  
+    scrape_configs:
+      - job_name: 'yc-monitoring-export-kubernetes'
+        metrics_path: '/monitoring/v2/prometheusMetrics'
+        scheme: 'https'
+        params:
+          folderId:
+          - '{{ .Values.prometheus.folderId }}'
+          service:
+          - '{{ .Values.prometheus.serviceKubernetes }}'
+        bearer_token: '{{ .Values.prometheus.token }}'
+        static_configs:
+        - targets: ['monitoring.api.cloud.yandex.net']
+          labels:
+            folderId: '{{ .Values.prometheus.folderId }}'
+            service: '{{ .Values.prometheus.serviceKubernetes }}'
+      - job_name: 'yc-monitoring-export-vms'
+        metrics_path: '/monitoring/v2/prometheusMetrics'
+        scheme: 'https'
+        params:
+          folderId:
+          - '{{ .Values.prometheus.folderId }}'
+          service:
+          - '{{ .Values.prometheus.serviceCompute }}'
+        bearer_token: '{{ .Values.prometheus.token }}'
+        static_configs:
+        - targets: ['monitoring.api.cloud.yandex.net']
+          labels:
+            folderId: '{{ .Values.prometheus.folderId }}'
+            service: '{{ .Values.prometheus.serviceCompute }}'
+      - job_name: 'yc-monitoring-export-CH'
+        metrics_path: '/monitoring/v2/prometheusMetrics'
+        scheme: 'https'
+        params:
+          folderId:
+          - '{{ .Values.prometheus.folderId }}'
+          service:
+          - '{{ .Values.prometheus.serviceCH }}'
+        bearer_token: '{{ .Values.prometheus.token }}'
+        static_configs:
+        - targets: ['monitoring.api.cloud.yandex.net']
+          labels:
+            folderId: '{{ .Values.prometheus.folderId }}'
+            service: '{{ .Values.prometheus.serviceCHs }}'

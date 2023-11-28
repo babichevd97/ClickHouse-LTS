@@ -14,6 +14,10 @@ spec:
       labels:
         app: grafana
     spec:
+      {{- with $.Values.grafana.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       securityContext:
         runAsUser: 0
       containers:
@@ -49,7 +53,7 @@ spec:
     - "ReadWriteOnce"
   resources:
     requests:
-      storage:  "10Gi"
+      storage:  "30Gi"
   storageClassName: "yc-network-hdd"
 
 ---
@@ -77,11 +81,20 @@ metadata:
   namespace: click-graphite
 data:
   datasources.yaml: | #Predefined datasource (remote - read from graphite)
-    # apiVersion: 1
-    # datasources:
-    # - name: TestDS
-    #   type: prometheus
-    #   url: http://{{ .Release.Name }}-prometheus-service:9090
-    #   access: proxy
-    #   isDefault: true
+     apiVersion: 1
+     datasources:
+     - name: Prometheus graphite-CH #Graphite
+       type: prometheus
+       url: http://{{ .Release.Name }}-graphite-service.click-graphite:9091
+       access: proxy
+       isDefault: false
+     - name: Prometheus vmsingle bench #In case you are using vmbenchmark. Adjust it , or leave it blank, or do not use at all, if you do no need benching
+       type: prometheus
+       url: http://my-bench-prometheus-benchmark-vmsingle-svc.vm-benchmark:8430/prometheus/
+       access: proxy
+       isDefault: false
 {{- end }}
+#In case you use predefined chart values:
+# - {{ .Release.Name }}-graphite-service.click-graphite:9091 - datasource to graphite. Quering Prom - data
+# - http://my-bench-prometheus-benchmark-vmsingle-svc.vm-benchmark:8430/prometheus/ - datasource to VM single benchmark component. Leave it balnk, or do not use at all, if you do no need benching
+

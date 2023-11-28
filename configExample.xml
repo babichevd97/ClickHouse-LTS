@@ -1,0 +1,38 @@
+<config>
+
+    <!--###Specify here connection parameters, to connect quickly to your ClickHouse instance via clickhouse - client###-->
+
+    <!-- <host>127.0.0.1</host> -->
+    <!-- <port>8080</port> -->
+    <!-- # front-server -->
+    <host>frontServer.net</host> <!--Your host FQDN-->
+    <!-- # shard 1 host 1 -->
+    <!--<host>shard1Host1.net</host>-->
+    <!-- # shard 1 host 2 -->
+    <!-- <host>shard1Host2.net</host> -->
+
+    <!--Specify credentials -->
+    <!-- <user>default</user> -->
+    <!-- <password>demo</password> -->
+
+
+
+
+    <!--###In case you are using cloud solution, you probably will need to specify CAfile location, to connect to you cluster securely###-->
+    <!--###Below is an example of configuring secure connection for yandex cloud###-->
+    <secure>true</secure>
+    <format>PrettyCompactMonoBlock</format>
+    <multiquery>true</multiquery>
+    <openSSL>
+    <client>
+        <loadDefaultCAFile>true</loadDefaultCAFile>
+        <caConfig>/path_to_your_ca/ProviderRootCA.crt</caConfig> <!--Path for CA-->
+        <cacheSessions>true</cacheSessions>
+        <disableProtocols>sslv2,sslv3</disableProtocols>
+        <preferServerCiphers>true</preferServerCiphers>
+        <invalidCertificateHandler>
+        <name>RejectCertificateHandler</name>
+        </invalidCertificateHandler>
+    </client>
+    </openSSL>
+</config>

@@ -1,6 +1,7 @@
 config.xml
 prometheus-benchmark/
 CustomValues.yaml
-sql/
 ext-clusters.xml
 zookeeper.xml
+prometheus.yaml
+.vscode

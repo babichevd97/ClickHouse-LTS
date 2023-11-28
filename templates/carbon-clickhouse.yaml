@@ -14,6 +14,10 @@ spec:
       labels:
         app: carbon-clickhouse
     spec:
+      {{- with $.Values.carbon.clickhouse.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       containers:
         - name: carbon-clickhouse
           image: kazhem/carbon-clickhouse:v0.11.7
@@ -55,19 +59,20 @@ data:
     [common]
     metric-prefix = "stats.carbon_clickhouse.prom.{host}"
     metric-endpoint = "local"
-    max-cpu = 1
-    metric-interval = "1m0s"
+    max-cpu = 2
+    metric-interval = "1m"
 
     [data]
     path = "/data/carbon-clickhouse/"
     compression-level = 0
-    chunk-interval = "30s"
+    chunk-interval = "1s"
     chunk-auto-interval = ""
     compression = "none"
 
     [upload.graphite]
     type = "points"
-    table = "distributed_graphite"
+    table = "distributed_graphite" #In case you want to write to distributed table
+    #table = "graphite" #In case you want to write straight to shard
     zero-timestamp = false
     threads = 1
     url = "{{ .Values.carbon.clickhouse.protocol }}://{{ .Values.carbon.clickhouse.user }}:{{ .Values.carbon.clickhouse.pass }}@{{ .Values.carbon.clickhouse.host }}:{{ .Values.carbon.clickhouse.port }}/"
@@ -79,7 +84,8 @@ data:
 
     [upload.graphite_index]
     type = "index"
-    table = "distributed_graphite_index"
+    table = "distributed_graphite_index" #In case you want to write to distributed table
+    #table = "graphite_index" #In case you want to write straight to shard
     threads = 1
     url =  "{{ .Values.carbon.clickhouse.protocol }}://{{ .Values.carbon.clickhouse.user }}:{{ .Values.carbon.clickhouse.pass }}@{{ .Values.carbon.clickhouse.host }}:{{ .Values.carbon.clickhouse.port }}/"
     timeout = "1m0s"
@@ -91,7 +97,8 @@ data:
 
     [upload.graphite_tagged]
     type = "tagged"
-    table = "distributed_graphite_tagged"
+    table = "distributed_graphite_tagged" #In case you want to write to distributed table
+    #table = "graphite_tagged" #In case you want to write straight to shard
     threads = 1
     url = "{{ .Values.carbon.clickhouse.protocol }}://{{ .Values.carbon.clickhouse.user }}:{{ .Values.carbon.clickhouse.pass }}@{{ .Values.carbon.clickhouse.host }}:{{ .Values.carbon.clickhouse.port }}/"
     timeout = "1m0s"

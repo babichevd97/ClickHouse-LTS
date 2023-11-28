@@ -14,6 +14,10 @@ spec:
       labels:
         app: graphite-clickhouse
     spec:
+      {{- with $.Values.graphite.clickhouse.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       containers:
         - name: graphite-clickhouse
           image: kazhem/graphite-clickhouse:v0.13.4
@@ -61,19 +65,20 @@ data:
   graphite-clickhouse.conf: | #Graphite ClickHouse simple configuration. More info here: https://github.com/go-graphite/graphite-clickhouse
     [common]
     listen = ":9090"
-    max-cpu = 1
+    max-cpu = 2
     max-metrics-in-find-answer = 0
+    max-metrics-per-target = 0
     [clickhouse]
     url = "{{ .Values.graphite.clickhouse.protocol }}://{{ .Values.graphite.clickhouse.user }}:{{ .Values.graphite.clickhouse.pass }}@{{ .Values.graphite.clickhouse.host }}:{{ .Values.graphite.clickhouse.port }}/"
     extra-prefix = ""
-    data-timeout = "1m0s"
+    data-timeout = "10m0s"
     index-table = "distributed_graphite_index"
     index-use-daily = true
-    index-timeout = "1m"
+    index-timeout = "10m"
     tagged-table = "distributed_graphite_tagged"
     date-tree-table = ""
     date-tree-table-version = 0
-    tree-timeout = "1m0s"
+    tree-timeout = "10m0s"
     # mTLS HTTPS configuration for connecting to clickhouse server
     # [clickhouse.tls]
     # ca-cert = ["/usr/local/share/ca-certificates/Yandex/ca-cert"]

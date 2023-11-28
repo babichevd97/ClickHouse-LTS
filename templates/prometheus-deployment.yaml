@@ -14,6 +14,10 @@ spec:
       labels:
         app: prometheus
     spec:
+      {{- with $.Values.prometheus.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       containers:
         - name: prometheus
           image: prom/prometheus
@@ -63,27 +67,11 @@ data:
     global:
       scrape_interval: 15s  
     scrape_configs:
-      - job_name: 'yc-monitoring-export'
-        metrics_path: '/monitoring/v2/prometheusMetrics'
-        scheme: 'https'
-        params:
-          folderId:
-          - '{{ .Values.prometheus.folderId }}'
-          service:
-          - '{{ .Values.prometheus.service }}'
-        bearer_token: '{{ .Values.prometheus.token }}'
-        static_configs:
-        - targets: ['monitoring.api.cloud.yandex.net']
-          labels:
-            folderId: '{{ .Values.prometheus.folderId }}'
-            service: '{{ .Values.prometheus.service }}'
-            
-               
-      #- job_name: 'node-exporter'
+      #- job_name: 'click-exporter'
         #static_configs:
           #- targets: ['{{ .Release.Name }}-nodeexporter-service:9100']
     #remote_write:
       #- url: "http://{{ .Release.Name }}-carbon-service:2006"
-    #remote_read:
-      #- url: "http://{{ .Release.Name }}-graphite-service:9091/api/v1/read"
+    remote_read:
+      - url: "http://{{ .Release.Name }}-graphite-service:9091/api/v1/read"
 {{- end }}
