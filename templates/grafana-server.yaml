@@ -44,6 +44,7 @@ spec:
             claimName: "{{ .Release.Name }}-grafana-pvc"
 
 ---
+# In case you need PersistentVolumeClaim
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
@@ -54,6 +55,8 @@ spec:
   resources:
     requests:
       storage:  "30Gi"
+
+  #On our example we use yamdex cloud. You can change it if you need
   storageClassName: "yc-network-hdd"
 
 ---

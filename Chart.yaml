@@ -8,8 +8,3 @@ description: Helm chart for deploying ClickHouse and Graphite long-term storage
 maintainers:
   - email: babichevd97@gmail.com
     name: Denis Babichev
-dependencies: #Chart dependency example, in case you want to use chproxy to distribute your qeuries
-  - name: chproxy
-    version: 1.0.4
-    repository: file://../plum-helm/charts/chproxy
-    condition: chproxy.enabled

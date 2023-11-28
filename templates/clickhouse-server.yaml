@@ -1,4 +1,6 @@
 {{- if .Values.clickhouse.enabled }}
+
+###!!!This is an example of creating a one-node single clickhouse host. Not a clustered version!!!###
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -18,9 +20,11 @@ spec:
         - name: clickhouse
           image: yandex/clickhouse-server:latest
           volumeMounts:
+          #Essential rollup to have an availability to create GraphiteMergeeTreeEngines
             - name: graphite-rollup-conf
               mountPath: "/etc/clickhouse-server/config.d/graphite_rollup.xml"
               subPath: "graphite_rollup.xml"
+          #To automatically create essential tables on cluster
             - name: poststart-volume
               mountPath: "/sql-scripts/graphite_tables.sql"
               subPath: "graphite_tables.sql"
@@ -46,6 +50,7 @@ spec:
           persistentVolumeClaim:
             claimName: "{{ .Release.Name }}-clickhouse-pvc"
 ---
+#You can use a job to create all the neede tables right after container starts (optional)
 apiVersion: batch/v1
 kind: Job
 metadata:

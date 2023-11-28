@@ -1,0 +1,30 @@
+<!--###This configuration file is needed to be filled, in case you are using your own CH configuration###-->
+<!--###Clickhouse need to upload it while starting to get up-to-date information about existing clusters and shards/replica inside it###-->
+
+<!--###You do not need to fill it, if you are using managed solution. But in case you want to deploy storage cluster in cloud
+    But frontserver localy (or somewhere on-prems) - you should also let front - cluster know about existing storage nodes
+    and specify them in your front - cluster configuration as well. Otherwise distribution tables will not be working pointing to separate
+    storade cluster###-->
+
+<?xml version="1.0"?>
+<clickhouse>
+    <remote_servers>
+        <prom_cluster><!--###Specify your cluster_name here###-->
+            <shard><!--###Specify your shard info here###-->
+                <internal_replication>true</internal_replication>
+                <replica>
+                    <host>replica1.net</host><!--###Specify your host FQDN here###-->
+                    <user>demo</user><!--###Specify your host user here###-->
+                    <password>demo</password><!--###Specify your host pass here###-->
+                    <port>9000</port><!--###Specify your port here###-->
+                </replica>
+                <replica>
+                    <host>rc1a-va3k49h8itvlmc6a.mdb.yandexcloud.net</host>
+                    <user>admin</user>
+                    <password>hilbert123</password>
+                    <port>9000</port>
+                </replica>
+            </shard>
+        </prom_cluster>
+    </remote_servers>
+</clickhouse>

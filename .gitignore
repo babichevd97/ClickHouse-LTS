@@ -5,3 +5,5 @@ ext-clusters.xml
 zookeeper.xml
 prometheus.yaml
 .vscode
+templates/carbon-clickhouse.yaml
+templates/graphite-clickhouse.yaml

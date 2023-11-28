@@ -70,8 +70,7 @@ data:
       #- job_name: 'click-exporter'
         #static_configs:
           #- targets: ['{{ .Release.Name }}-nodeexporter-service:9100']
-    #remote_write:
+
+    #remote_write: - write URL for graphite
       #- url: "http://{{ .Release.Name }}-carbon-service:2006"
-    remote_read:
-      - url: "http://{{ .Release.Name }}-graphite-service:9091/api/v1/read"
 {{- end }}

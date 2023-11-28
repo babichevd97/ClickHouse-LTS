@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<clickhouse>
+    <zookeeper>
+        <!-- Configuration for zookeeper-->
+        <!--  <node>
+            <host>host1.net</host> 
+            <port>2181</port>
+        </node>
+        <node>
+            <host>host2.net</host>
+            <port>2181</port>
+        </node> -->
+
+        <!-- Configuration for zookeeper in your kubernetes cluster-->
+        <!--  <node>
+            <host>zookeeper-service</host>
+            <port>2181</port>
+        </node> -->               
+    </zookeeper>
+</clickhouse>

@@ -23,23 +23,13 @@ spec:
       #Example below shows one of the way to use it
       #Or you can moint it directly, described it in your deployment (Example shown in graphite)
 
-      #Examples below uses basic container. If you are not using managed solution
       containers: 
         - name: carbon-clickhouse
-          image: kazhem/carbon-clickhouse:v0.11.7
+          image: your_custom_container/carbon-clickhouse:v0.11.7
           imagePullPolicy: Always
           volumeMounts:
             - name: carbon-conf
               mountPath: "/etc/carbon-clickhouse"
-      containers: 
-        - name: carbon-clickhouse
-          image: kazhem/carbon-clickhouse:v0.11.7
-          imagePullPolicy: Always
-      volumes:
-        - name: carbon-conf
-          configMap:
-            name: "{{ .Release.Name }}-carbon-cm"
-
 ---
 ---
 apiVersion: v1

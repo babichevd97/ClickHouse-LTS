@@ -1,21 +1,22 @@
-#You can configure to collect performance metrics directly from cloud service, if you use clickhouse managed 
+#You can configure to collect performance metrics directly from cloud service, if you use managed clickhouse
+#Below is an example of scraping metrics from Yandex Cloud
     global:
       scrape_interval: 15s  
     scrape_configs:
-      - job_name: 'yc-monitoring-export-kubernetes'
+      - job_name: 'yc-monitoring-export-kubernetes'  #Specify your job name
         metrics_path: '/monitoring/v2/prometheusMetrics'
         scheme: 'https'
         params:
           folderId:
-          - '{{ .Values.prometheus.folderId }}'
+          - '{{ .Values.prometheus.folderId }}' #Your FolderId, specified in Values.yaml
           service:
-          - '{{ .Values.prometheus.serviceKubernetes }}'
+          - '{{ .Values.prometheus.serviceKubernetes }}' #Your ServiceId, specified in Values.yaml
         bearer_token: '{{ .Values.prometheus.token }}'
         static_configs:
         - targets: ['monitoring.api.cloud.yandex.net']
           labels:
-            folderId: '{{ .Values.prometheus.folderId }}'
-            service: '{{ .Values.prometheus.serviceKubernetes }}'
+            folderId: '{{ .Values.prometheus.folderId }}' #Your FolderId, specified in Values.yaml
+            service: '{{ .Values.prometheus.serviceKubernetes }}' #Your ServiceId, specified in Values.yaml
       - job_name: 'yc-monitoring-export-vms'
         metrics_path: '/monitoring/v2/prometheusMetrics'
         scheme: 'https'
