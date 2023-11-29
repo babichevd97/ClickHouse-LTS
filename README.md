@@ -2,10 +2,10 @@
 This is a simple hands-on chart for trying out how does ClickHouse-Graphite-Carbon bundle works as a Long-Term Storage. It is not suitable for production usage, but it can form a basis for such
 
 ## Related documentation
-- https://clickhouse.com/docs/en/engines/table-engines/mergetree-family/graphitemergetree - ClickHouse GraphiteMergeTree Engine documentation
-- https://github.com/go-graphite/graphite-clickhouse/ - graphite-clickhouse documentation
-- https://github.com/go-graphite/carbon-clickhouse - carbon - clickhouse documentation
-- https://thin-record-006.notion.site/Using-Clickhouse-as-long-term-storage-for-Prometheus-449b1c3a0a8b4cdb90b7352f807d6487?pvs=4
+- [ClickHouse GraphiteMergeTree Engine documentation](https://clickhouse.com/docs/en/engines/table-engines/mergetree-family/graphitemergetree)
+- [graphite-clickhouse documentation](https://github.com/go-graphite/graphite-clickhouse/)
+- [carbon - clickhouse documentation](https://github.com/go-graphite/carbon-clickhouse)
+- [Basics and architecture](https://thin-record-006.notion.site/Using-Clickhouse-as-long-term-storage-for-Prometheus-449b1c3a0a8b4cdb90b7352f807d6487?pvs=4)
 
 ## Requirements
 You need to be installed on yout tested system:
@@ -104,3 +104,61 @@ If you use default namespace, and run benchmark in the same cluster, all the ess
     ```
 
 # Benchmark results
+## Specifications
+- cluster1 (data): 2 shard 2 hosts each for Replicated Tables
+- cluster2 (front): 1 host for distributed tabels
+- Every component has 2 CPUs and 4 GB RAM
+
+## Test1
+| Benchmark params   |             |
+|--------------------|-------------|
+| WriteReplicas      | 1           |
+|     TargetCount    |     1000    |
+|     Concurrency    |     8       |
+
+| Ingest results |               |            |                    |                       |
+|----------------|---------------|------------|--------------------|-----------------------|
+|                |     CPU       |     RAM    |     Insert Rate    |     Failed queries    |
+|     Shards     |     10-13%    |     25%    |     30-35k         |     0                 |
+|     Front      |     16%       |     25%    |     120k           |     0                 |
+
+| Select results |                                    |                         |                        |               |                                                        |                        |                        |               |
+|----------------|------------------------------------|-------------------------|------------------------|---------------|--------------------------------------------------------|------------------------|------------------------|---------------|
+|                |             PromQL query           |                         |                        |               |                                                        |                        |                        |               |
+|                |     node_cpu_seconds_total[10h]    |                         |                        |               |     sum_over_time     (node_cpu_seconds_total[10h])    |                        |                        |               |
+|                |     CPU                            |     RAM                 |     Series Returned    |     Time      |     CPU                                                |     RAM                |     Series Returned    |     Time      |
+|     Shards     |     Increased to 20%               |     Increased to 30%    |     5524320            |     65 sec    |     No changes                                         |     No changes         |     48000              |     15 sec    |
+|     Front      |     Increased to 20%               |     25%                 |                        |               |     No changes                                         |     No changes         |                        |               |
+
+### Bench Metrics:
+IngestRate - 116wr/s
+The number of dropped data packets when sending them to CH - 0
+Amounts of pending data at vmagent side, which isn't sent to remote storage yet - 0
+Number of retries when sending data to remote storage - 0
+99th percentile for the duration to push the collected data to the configured remote storage - 0.05 sec max
+
+
+## Test2
+| Benchmark params   |             |
+|--------------------|-------------|
+| WriteReplicas      | 1           |
+|     TargetCount    |     8000    |
+|     Concurrency    |     10      |
+
+| Ingest results |               |                                |                       |
+|----------------|---------------|------------|-----------------------|
+|                |     CPU       |     RAM        |     Failed queries    |
+|     Shards     |     up to 100% for large selects. AVG - 75%    |     2/4 - up to 50%. 2/4 - 30-35%                |     peaks to 5%                 |
+|     Front      |     45%       |     35-37%                    |     peaks to 5%                 |
+
+### Bench Metrics:
+IngestRate - 420wr/s
+The number of dropped data packets when sending them to CH - 0
+Amounts of pending data at vmagent side, which isn't sent to remote storage yet - 0
+Number of retries when sending data to remote storage - small jumps to 0.6
+99th percentile for the duration to push the collected data to the configured remote storage - 1-1.7%
+
+### Notes:
+Heavy sql's consume all cpu
+Long time for grafana graph draw
+400k - is a limit for this setup
