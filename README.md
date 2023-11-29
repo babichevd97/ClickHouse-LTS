@@ -6,6 +6,8 @@ This is a simple hands-on chart for trying out how does ClickHouse-Graphite-Carb
 - [graphite-clickhouse documentation](https://github.com/go-graphite/graphite-clickhouse/)
 - [carbon - clickhouse documentation](https://github.com/go-graphite/carbon-clickhouse)
 - [Basics and architecture](https://thin-record-006.notion.site/Using-Clickhouse-as-long-term-storage-for-Prometheus-449b1c3a0a8b4cdb90b7352f807d6487?pvs=4)
+- [Exporting metrics in Prometheus format for Yandex Clous](https://cloud.yandex.com/en/docs/monitoring/operations/metric/prometheusExport)
+- [GraphiteMergeTree](https://clickhouse.com/docs/en/engines/table-engines/mergetree-family/graphitemergetree)
 
 ## Requirements
 You need to be installed on yout tested system:
