@@ -1,0 +1,261 @@
+{{- if .Values.clickhousefront.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "{{ .Release.Name }}-clickhousefront-deployment"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: clickhousefront
+  template:
+    metadata:
+      labels:
+        app: clickhousefront
+    spec:
+      containers:
+        - name: clickhouse
+          image: yandex/clickhouse-server:latest
+          volumeMounts:
+          #Essential rollup to have an availability to create GraphiteMergeeTreeEngines
+            - name: graphite-rollup-conf 
+              mountPath: "/etc/clickhouse-server/config.d/graphite_rollup.xml"
+              subPath: "graphite_rollup.xml"
+          #Essential rollup to let frontend-cluster know info about your storage node clusters
+            - name: ext-clusters-rollup
+              mountPath: "/etc/clickhouse-server/config.d/ext-clusters.xml"
+              subPath: "ext-clusters.xml"
+          #To automatically create essential tables on cluster(optional)
+            #- name: poststart-volume
+            #  mountPath: "/sql-scripts/graphite_tables.sql"
+            #  subPath: "graphite_tables.sql"
+          #zookeeper
+            - name: zookeeper-rollup
+              mountPath: "/etc/clickhouse-server/config.d/zookeeper.xml"
+              subPath: "zookeeper.xml"
+
+          #Data volune (optional)
+          #  - name: clickhouse-data-volume
+          #    mountPath: /var/lib/clickhouse/
+          env:
+            - name: CLICKHOUSE_USER
+              value: "{{ .Values.clickhouse.user }}"
+            - name: CLICKHOUSE_PASSWORD
+              value: "{{ .Values.clickhouse.pass }}"
+          ports:
+            - containerPort: 8123
+            - containerPort: 9000
+
+      volumes: #Graphite rollup - volume
+        - name: graphite-rollup-conf
+          configMap:
+            name: "{{ .Release.Name }}-clickhousefront-cm"
+        - name: ext-clusters-rollup
+          configMap:
+            name: "{{ .Release.Name }}-clickhousefront-ext-clusters-cm"
+        - name: zookeeper-rollup
+          configMap:
+            name: "{{ .Release.Name }}-clickhousefront-zookeeper-cm"
+      #  - name: clickhouse-data-volume
+      #    persistentVolumeClaim:
+      #      claimName: "{{ .Release.Name }}-clickhouse-pvc"
+---
+
+#You can use a job to create all the distributed tables right after container starts (optional)
+#apiVersion: batch/v1 
+#kind: Job
+#metadata:
+#  name: sql-job
+#spec:
+#  template:
+#    spec:
+#      containers:
+#      - name: sql-side-container
+#        volumeMounts:
+#          - name: poststart-volume
+#            mountPath: "/sql/DistributedOnFront.sql"
+#            subPath: "DistributedOnFront.sql"
+#        image: yandex/clickhouse-client:latest
+#        command: ["/bin/sh", "-c", "sleep 15 && /usr/bin/clickhouse-client --host={{ .Release.Name }}-clickhouse-service --user={{ .Values.clickhouse.user }} --password={{ .Values.clickhouse.pass }} --multiquery < /sql/DistributedOnFront.sql"]
+#      restartPolicy: Never
+#      volumes:
+#        - name: poststart-volume
+#          configMap:
+#            name: "{{ .Release.Name }}-clickhouse-sql-poststart"
+#  backoffLimit: 0
+
+---
+#PersistentVolumeClaim in case you need it (optional)
+#kind: PersistentVolumeClaim
+#apiVersion: v1
+#metadata:
+#  name: "{{ .Release.Name }}-clickhousefront-pvc"
+#spec:
+#  accessModes:
+#    - "ReadWriteOnce"
+#  resources:
+#    requests:
+#      storage:  "10Gi"
+#  storageClassName: "default"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: "{{ .Release.Name }}-clickhousefront-service"
+#   namespace: click-graphite
+spec:
+  type: NodePort
+  selector:
+    app: clickhouse
+  ports:
+    - name: "8123"
+      protocol: TCP
+      port: 8123
+      targetPort: 8123
+    #   nodePort: {{ .Values.clickhouse.serverNodePort }}
+    - name: "9000"
+      protocol: TCP
+      port: 9000
+      targetPort: 9000
+    #   nodePort: {{ .Values.clickhouse.clientNodePort }}
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: "{{ .Release.Name }}-clickhousefront-cm"
+#   namespace: click-graphite
+data:
+#Required clickhouse xml - file to enable GraphiteMergeTree engine. Adjustable. Related info: https://clickhouse.com/docs/en/engines/table-engines/mergetree-family/graphitemergetree
+  graphite_rollup.xml: |
+    <yandex>
+        <graphite_rollup>
+            <path_column_name>Path</path_column_name>
+            <time_column_name>Time</time_column_name>
+            <value_column_name>Value</value_column_name>
+            <version_column_name>Timestamp</version_column_name>
+            <default>
+                <function>avg</function>
+                <retention>
+                    <age>0</age>
+                    <precision>60</precision>
+                </retention>
+                <retention>
+                    <age>2592000</age>
+                    <precision>3600</precision>
+                </retention>
+            </default>
+        </graphite_rollup>
+    </yandex>
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: "{{ .Release.Name }}-clickhousefront-ext-clusters-cm"
+#   namespace: click-graphite
+data:
+#Required clickhouse xml - file to let front cluster know about your storage cluster
+#Fill it with your data
+
+  ext-clusters.xml: |
+    <clickhouse>
+        <remote_servers>
+            <prom_cluster><!--###Specify your cluster_name here###-->
+                <shard><!--###Specify your shard info here###-->
+                    <internal_replication>true</internal_replication>
+                    <replica>
+                        <host>replica1.net</host><!--###Specify your host FQDN here###-->
+                        <user>demo</user><!--###Specify your host user here###-->
+                        <password>demo</password><!--###Specify your host pass here###-->
+                        <port>9000</port><!--###Specify your port here###-->
+                    </replica>
+                    <replica>
+                        <host>rc1a-va3k49h8itvlmc6a.mdb.yandexcloud.net</host>
+                        <user>admin</user>
+                        <password>hilbert123</password>
+                        <port>9000</port>
+                    </replica>
+                </shard>
+            </prom_cluster>
+        </remote_servers>
+    </clickhouse>
+
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: "{{ .Release.Name }}-clickhousefront-zookeeper-cm"
+#   namespace: click-graphite
+data:
+#Your zookeepere configurarion
+  zookeeper.xml: |
+    <yandex>
+        <zookeeper>
+            <!-- Configuration for zookeeper-->
+            <!--  <node>
+                <host>host1.net</host> 
+                <port>2181</port>
+            </node>
+            <node>
+                <host>host2.net</host>
+                <port>2181</port>
+            </node> -->
+
+            <!-- Configuration for zookeeper in your kubernetes cluster-->
+            <!--  <node>
+                <host>zookeeper-service</host>
+                <port>2181</port>
+            </node> -->               
+        </zookeeper>
+    </yandex>
+
+---
+
+#Config map to run sql - queries creating distibuted tables right after container start
+#Here click-front is name of the front-clusert
+#Here prom_cluster is name of the storage cluster
+#Adjust these values for your setup
+
+#apiVersion: v1
+#kind: ConfigMap
+#metadata:
+#  name: "{{ .Release.Name }}-clickhouse-sql-poststart"
+#   namespace: click-graphite
+#data:
+#  graphite_tables.sql: | #Required sql-predefined tables for metrics. Must correlate with graphite_rollup.xml. Related info: https://clickhouse.com/docs/en/engines/table-engines/mergetree-family/graphitemergetree
+#    CREATE OR REPLACE TABLE distributed_graphite ON CLUSTER 'click-front'
+#    --AS graphite    -- формат из определенной таблицы
+#    (
+#      Path String,
+#      Value Float64,
+#      Time UInt32,
+#      Date Date,
+#      Timestamp UInt32
+#    )
+#    ENGINE = Distributed('prom_cluster', currentDatabase(), graphite, rand());
+
+#    CREATE OR REPLACE TABLE distributed_graphite_index ON CLUSTER 'click-front'
+#    --AS graphite_index   -- формат из определенной таблицы
+#    (
+#      Date Date,
+#      Level UInt32,
+#      Path String,
+#      Version UInt32
+#    )
+#    ENGINE = Distributed('prom_cluster', currentDatabase(), graphite_index, rand());
+#
+#    CREATE OR REPLACE TABLE distributed_graphite_tagged ON CLUSTER 'click-front'
+#    --AS graphite_tagged    -- формат из определенной таблицы
+#    (
+#      Date Date,
+#      Tag1 String,
+#      Path String,
+#      Tags Array(String),
+#      Version UInt32
+#    )
+#    ENGINE = Distributed('prom_cluster', currentDatabase(), graphite_tagged, rand());
+
+{{- end }}

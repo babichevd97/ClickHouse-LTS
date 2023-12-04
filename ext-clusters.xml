@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<clickhouse>
+    <remote_servers>
+        <prom_cluster>
+            <shard>
+                <internal_replication>true</internal_replication>
+                <replica>
+                    <host>rc1a-okgvsvhllaskgnnv.mdb.yandexcloud.net</host>
+                    <user>admin</user>
+                    <password>hilbert123</password>
+                    <port>9000</port>
+                </replica>
+                <replica>
+                    <host>rc1a-va3k49h8itvlmc6a.mdb.yandexcloud.net</host>
+                    <user>admin</user>
+                    <password>hilbert123</password>
+                    <port>9000</port>
+                </replica>
+            </shard>
+            <shard>
+                <internal_replication>true</internal_replication>
+                <replica>
+                    <host>rc1a-70q2ok0fieol9j0k.mdb.yandexcloud.net</host>
+                    <user>admin</user>
+                    <password>hilbert123</password>
+                    <port>9000</port>
+                </replica>
+                <replica>
+                    <host>rc1a-t7o93d1sgcqdokci.mdb.yandexcloud.net</host>
+                    <user>admin</user>
+                    <password>hilbert123</password>
+                    <port>9000</port>
+                </replica>
+            </shard>
+        </prom_cluster>
+    </remote_servers>
+</clickhouse>

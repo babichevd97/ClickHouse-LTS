@@ -1,0 +1,36 @@
+<config>
+    <!-- <host>127.0.0.1</host> -->
+    <!-- <port>8080</port> -->
+    <!-- # front-server -->
+    <host>rc1a-ubp4bu60luehmnti.mdb.yandexcloud.net</host>
+    <!-- # shard 1 host 1 -->
+    <!--<host>rc1a-okgvsvhllaskgnnv.mdb.yandexcloud.net</host>-->
+    <!-- # shard 1 host 2 -->
+    <!-- <host>rc1a-va3k49h8itvlmc6a.mdb.yandexcloud.net</host> -->
+    <!-- # shard 2 host 1 -->
+    <!-- <host>rc1a-70q2ok0fieol9j0k.mdb.yandexcloud.net</host> -->
+    <!-- # shard 2 host 2 -->
+    <!-- <host>rc1a-t7o93d1sgcqdokci.mdb.yandexcloud.net</host> -->
+
+
+    <user>admin</user>
+    <password>hilbert123</password>
+    <!-- <user>default</user> -->
+    <!-- <password>demo</password> -->
+
+    <secure>true</secure>
+    <format>PrettyCompactMonoBlock</format>
+    <multiquery>true</multiquery>
+    <openSSL>
+    <client>
+        <loadDefaultCAFile>true</loadDefaultCAFile>
+        <caConfig>/usr/local/share/ca-certificates/Yandex/YandexInternalRootCA.crt</caConfig>
+        <cacheSessions>true</cacheSessions>
+        <disableProtocols>sslv2,sslv3</disableProtocols>
+        <preferServerCiphers>true</preferServerCiphers>
+        <invalidCertificateHandler>
+        <name>RejectCertificateHandler</name>
+        </invalidCertificateHandler>
+    </client>
+    </openSSL>
+</config>

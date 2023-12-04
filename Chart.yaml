@@ -1,0 +1,10 @@
+# Chart main file
+apiVersion: v2
+namespace: click-graphite
+name: clickhouse-graphite
+type: application
+version: 1.0.0
+description: Helm chart for deploying ClickHouse and Graphite long-term storage
+maintainers:
+  - email: babichevd97@gmail.com
+    name: Denis Babichev

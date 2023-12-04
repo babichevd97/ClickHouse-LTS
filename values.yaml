@@ -1,0 +1,114 @@
+# Fill in your hosts, users and passwords
+# Enabled field specifies, if corresponding pod should be created
+
+# Zookeeper.
+zookeeper:
+  enabled: false
+
+clickhousefront: # For front clickhouse installation (local)
+  enabled: false
+  user: "demo"
+  pass: "demo"
+  serverNodePort: 30010
+  clientNodePort: 30011
+
+  # Optional node selector. Specify yours, or leave it blank
+  #nodeSelector: {
+  #  task: "clickhouse" 
+  #}
+
+clickhouse: # For local clickhouse installatiom
+  enabled: false
+  user: "demo"
+  pass: "demo"
+  serverNodePort: 30010
+  clientNodePort: 30011
+
+  # Optional node selector. Specify yours, or leave it blank
+  #nodeSelector: {
+  #  task: "clickhouse" 
+  #}
+
+grafana:
+  enabled: true
+  user: "admin" # Default user, that will be assigned while starting pod
+  pass: "admin" # Default pass, that will be assigned while starting pod
+  serverNodePort: 30012
+
+  # Optional node selector. Specify yours, or leave it blank
+  #nodeSelector: {
+  #  task: "bench" 
+  #}
+
+prometheus:
+  enabled: false
+  serverNodePort: 30013
+
+  #Specify values below if you are using Yandex cloud and want to s
+  #Receive prometheus-like metrics from Yandex cloud 
+  
+  #folderId: "fffff"
+  #serviceCH: "managed-clickhouse" #Service name for ClickHouse
+  #serviceCompute: "compute" #Service name for VM's
+  #serviceKubernetes: "managed-kubernetes" #Service name for kubernetes
+  #token: "aaaaaa" #Your private token
+
+  # Optional node selector. Specify yours, or leave it blank
+  #nodeSelector: {
+  #  task: "bench" 
+  #}
+
+
+nodeexporter:
+  enabled: false
+  serverNodePort: 30014
+  # Optional node selector. Specify yours, or leave it blank
+  #nodeSelector: {
+  #  task: "clickhouse" 
+  #}
+
+carbonLTS:
+  clickhouse: # Your clickhoure credentials. Fill in, if you have are using not local cluster for tests 
+    user: admin # Specify clickhouse user
+    pass: "admin" # Specify clickhouse pass
+
+    host: "mdb.yandexcloud.net" # Specify clickhouse URL  (or proxy url)
+    #You can point your data directly to specific shard/loadbalancer or 
+    #Distributed table
+
+    protocol: "https"
+    port: 8443
+  enabled: true
+
+    # Optional node selector. Specify yours, or leave it blank
+    #nodeSelector: {
+    #  task: "bench" 
+    #}  
+
+graphiteLTS:
+  clickhouse: # Your clickhoure credentials. Fill in, if you have are using not local cluster for tests 
+    user: admin # Specify clickhouse user
+    pass: "admin" # Specify clickhouse pass
+    host: "mdb.yandexcloud.net" # Specify clickhouse URL (or proxy url)
+    protocol: "http"
+    port: 80
+
+    # Optional node selector. Specify yours, or leave it blank
+    #nodeSelector: {
+    #  task: "bench" 
+    #}
+
+  enabled: true
+
+qryn: 
+  enabled: false
+  click:
+    user: demo
+    password: demo
+    port: 8123
+    address: host.mdb.yandexcloud.net # Specify clickhouse URL (or proxy url)
+
+  # Optional node selector. Specify yours, or leave it blank
+  #nodeSelector: {
+  #  task: "clickhouse" 
+  #}

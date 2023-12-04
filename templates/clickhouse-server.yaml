@@ -1,0 +1,178 @@
+{{- if .Values.clickhouse.enabled }}
+
+###!!!This is an example of creating a one-node single clickhouse host. Not a clustered version!!!###
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "{{ .Release.Name }}-clickhouse-deployment"
+#   namespace: click-graphite
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: clickhouse
+  template:
+    metadata:
+      labels:
+        app: clickhouse
+    spec:
+      containers:
+        - name: clickhouse
+          image: yandex/clickhouse-server:latest
+          volumeMounts:
+          #Essential rollup to have an availability to create GraphiteMergeeTreeEngines
+            - name: graphite-rollup-conf
+              mountPath: "/etc/clickhouse-server/config.d/graphite_rollup.xml"
+              subPath: "graphite_rollup.xml"
+          #To automatically create essential tables on cluster
+            - name: poststart-volume
+              mountPath: "/sql-scripts/graphite_tables.sql"
+              subPath: "graphite_tables.sql"
+            - name: clickhouse-data-volume
+              mountPath: /var/lib/clickhouse/
+          env:
+            - name: CLICKHOUSE_USER
+              value: "{{ .Values.clickhouse.user }}"
+            - name: CLICKHOUSE_PASSWORD
+              value: "{{ .Values.clickhouse.pass }}"
+          ports:
+            - containerPort: 8123
+            - containerPort: 9000
+
+      volumes:
+        - name: graphite-rollup-conf
+          configMap:
+            name: "{{ .Release.Name }}-clickhouse-cm"
+        - name: poststart-volume
+          configMap:
+            name: "{{ .Release.Name }}-clickhouse-sql-poststart"
+        - name: clickhouse-data-volume
+          persistentVolumeClaim:
+            claimName: "{{ .Release.Name }}-clickhouse-pvc"
+---
+#You can use a job to create all the neede tables right after container starts (optional)
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: sql-job
+spec:
+  template:
+    spec:
+      containers:
+      - name: sql-side-container
+        volumeMounts:
+          - name: poststart-volume
+            mountPath: "/sql-scripts/graphite_tables.sql"
+            subPath: "graphite_tables.sql"
+        image: yandex/clickhouse-client:latest
+        command: ["/bin/sh", "-c", "sleep 15 && /usr/bin/clickhouse-client --host={{ .Release.Name }}-clickhouse-service --user={{ .Values.clickhouse.user }} --password={{ .Values.clickhouse.pass }} --multiquery < /sql-scripts/graphite_tables.sql"]
+      restartPolicy: Never
+      volumes:
+        - name: poststart-volume
+          configMap:
+            name: "{{ .Release.Name }}-clickhouse-sql-poststart"
+  backoffLimit: 0
+
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: "{{ .Release.Name }}-clickhouse-pvc"
+spec:
+  accessModes:
+    - "ReadWriteOnce"
+  resources:
+    requests:
+      storage:  "10Gi"
+  storageClassName: "default"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: "{{ .Release.Name }}-clickhouse-service"
+#   namespace: click-graphite
+spec:
+  type: NodePort
+  selector:
+    app: clickhouse
+  ports:
+    - name: "8123"
+      protocol: TCP
+      port: 8123
+      targetPort: 8123
+    #   nodePort: {{ .Values.clickhouse.serverNodePort }}
+    - name: "9000"
+      protocol: TCP
+      port: 9000
+      targetPort: 9000
+    #   nodePort: {{ .Values.clickhouse.clientNodePort }}
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: "{{ .Release.Name }}-clickhouse-cm"
+#   namespace: click-graphite
+data:
+  graphite_rollup.xml: | #Required clickhouse xml - file to enable GraphiteMergeTree engine. Adjustable. Related info: https://clickhouse.com/docs/en/engines/table-engines/mergetree-family/graphitemergetree
+    <yandex>
+        <graphite_rollup>
+            <path_column_name>Path</path_column_name>
+            <time_column_name>Time</time_column_name>
+            <value_column_name>Value</value_column_name>
+            <version_column_name>Timestamp</version_column_name>
+            <default>
+                <function>avg</function>
+                <retention>
+                    <age>0</age>
+                    <precision>60</precision>
+                </retention>
+                <retention>
+                    <age>2592000</age>
+                    <precision>3600</precision>
+                </retention>
+            </default>
+        </graphite_rollup>
+    </yandex>
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: "{{ .Release.Name }}-clickhouse-sql-poststart"
+#   namespace: click-graphite
+data:
+  graphite_tables.sql: | #Required sql-predefined tables for metrics. Must correlate with graphite_rollup.xml. Related info: https://clickhouse.com/docs/en/engines/table-engines/mergetree-family/graphitemergetree
+    CREATE OR REPLACE TABLE graphite (
+      Path String,
+      Value Float64,
+      Time UInt32,
+      Date Date,
+      Timestamp UInt32
+    ) ENGINE = GraphiteMergeTree('graphite_rollup')
+    PARTITION BY toYYYYMM(Date)
+    ORDER BY (Path, Time);
+
+    ---
+    CREATE OR REPLACE TABLE graphite_index (
+      Date Date,
+      Level UInt32,
+      Path String,
+      Version UInt32
+    ) ENGINE = ReplacingMergeTree(Version)
+    PARTITION BY toYYYYMM(Date)
+    ORDER BY (Level, Path, Date);
+
+    ---
+    CREATE OR REPLACE TABLE graphite_tagged (
+      Date Date,
+      Tag1 String,
+      Path String,
+      Tags Array(String),
+      Version UInt32
+    ) ENGINE = ReplacingMergeTree(Version)
+    PARTITION BY toYYYYMM(Date)
+    ORDER BY (Tag1, Path, Date);
+
+{{- end }}

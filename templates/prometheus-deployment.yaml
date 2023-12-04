@@ -1,0 +1,76 @@
+{{- if .Values.prometheus.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "{{ .Release.Name }}-prometheus-deployment"
+#   namespace: click-graphite
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prometheus
+  template:
+    metadata:
+      labels:
+        app: prometheus
+    spec:
+      {{- with $.Values.prometheus.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: prometheus
+          image: prom/prometheus
+          lifecycle:
+            postStart:
+              exec:
+                command: ["sh", "-c", "sleep 20"]
+          ports:
+            - containerPort: 9090
+          args:
+            - --config.file=/etc/prometheus/prometheus.yml
+          volumeMounts:
+            - name: config-volume
+              mountPath: /etc/prometheus
+      volumes:
+        - name: config-volume
+          configMap:
+            name: "{{ .Release.Name }}-prometheus-cm"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: "{{ .Release.Name }}-prometheus-service"
+  namespace: click-graphite
+spec:
+  selector:
+    app: prometheus
+  ports:
+    - name: "9090"
+      protocol: TCP
+      port: 9090
+      targetPort: 9090
+    #   nodePort: {{ .Values.prometheus.serverNodePort }}
+  type: ClusterIP
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: "{{ .Release.Name }}-prometheus-cm"
+  namespace: click-graphite
+data:
+#Predefined prometheus configuration. You can change write/read endpoints to carbon-service/graphite-service
+#You can configure to collect performance metrics directly from cloud service, if you use clickhouse managed
+  prometheus.yml: | 
+    global:
+      scrape_interval: 15s  
+    scrape_configs:
+      #- job_name: 'click-exporter'
+        #static_configs:
+          #- targets: ['{{ .Release.Name }}-nodeexporter-service:9100']
+
+    #remote_write: - write URL for graphite
+      #- url: "http://{{ .Release.Name }}-carbon-service:2006"
+{{- end }}

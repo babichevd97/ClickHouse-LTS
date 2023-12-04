@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<clickhouse>
+    <zookeeper>
+                    <!-- Configuration for zookeeper in YC-->
+        <!--  <node>
+            <host>rc1a-cs764fnc78nph43l.mdb.yandexcloud.net</host>
+            <port>2181</port>
+        </node>
+        <node>
+            <host>rc1b-l12u2970lkae2ai2.mdb.yandexcloud.net</host>
+            <port>2181</port>
+        </node>
+        <node>
+            <host>rc1c-9ffqio031timup8c.mdb.yandexcloud.net</host>
+            <port>2181</port>
+        </node> -->
+                    <!-- Configuration for zookeeper in your kubernetes cluster-->
+        <!--  <node>
+            <host>zookeeper-service</host>
+            <port>2181</port>
+        </node> -->               
+    </zookeeper>
+</clickhouse>
